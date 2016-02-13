@@ -20,7 +20,7 @@ function(){
 }
 ```
 
-I love it :heart:
+I love it :)
 
 $$e^{i \pi} = -1$$
 
