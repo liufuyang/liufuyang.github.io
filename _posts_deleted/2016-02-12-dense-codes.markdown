@@ -4,7 +4,6 @@ title:  "Dense codes"
 date:   2016-02-12 11:33:45 +0100
 comments: true
 ---
-
 ![Publish your negative results cartoon.](/assets/dense/negative-data.png)
 
 Hello.
