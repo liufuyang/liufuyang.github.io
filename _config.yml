@@ -9,7 +9,7 @@
 title: Fuyang Liu's Blog
 #email: someone@domain.com
 # > this means to ignore newlines until "baseurl:"
-description: Theme copied from <a href="http://rasmusbergpalm.github.io/">Rasmus Berg Palm Blog</a>
+description: Just another random site for random thoughts
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "liufuyang.github.io" # the base hostname & protocol for your site
 #twitter_username: liufu_ty
