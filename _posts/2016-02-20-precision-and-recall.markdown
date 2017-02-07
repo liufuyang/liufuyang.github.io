@@ -52,4 +52,4 @@ We need a single compare metric.
 
 $$F_1 = 2 \frac{PR}{P+R}$$
 
-Then simply run validation with different value of threshold to get a model with the highest $F_1$ value.
+Then simply run validation with different value of threshold to get a model with the highest $$F_1$$ value.
