@@ -17,7 +17,7 @@ the system ensures that it ends in the state you have described.
 
 Let's try learn some puppet via this youtube video:
 
-{% youtube Hiu_ui2nZa0 640 360 %} 
+youtube Hiu_ui2nZa0 640 360
 <br>
 
 
