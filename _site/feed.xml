@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Fuyang Liu&#39;s Blog</title>
+    <description>Just another random site for random thoughts</description>
+    <link>liufuyang.github.io/</link>
+    <atom:link href="liufuyang.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Tue, 07 Feb 2017 12:47:57 +0100</pubDate>
+    <lastBuildDate>Tue, 07 Feb 2017 12:47:57 +0100</lastBuildDate>
+    <generator>Jekyll v3.0.3</generator>
+    
+      <item>
+        <title>Learning Puppet</title>
+        <description>&lt;h2 id=&quot;what-is-puppet&quot;&gt;What is puppet?&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;It’s a software piece that allows automation. You configure a central server
+and the clients synchronize themselves to it.&lt;/li&gt;
+  &lt;li&gt;It’s a descriptive system. You decide that a file should be there, with some 
+permissions, content, that a software package should be installed, and at each run,
+the system ensures that it ends in the state you have described.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;getting-started&quot;&gt;Getting started&lt;/h2&gt;
+
+&lt;p&gt;Let’s try learn some puppet via this youtube video:&lt;/p&gt;
+
+&lt;style&gt;.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }&lt;/style&gt;
+&lt;div class=&quot;embed-container&quot;&gt;    &lt;iframe title=&quot;YouTube video player&quot; width=&quot;640&quot; height=&quot;390&quot; src=&quot;//www.youtube.com/embed/Hiu_ui2nZa0&quot; frameborder=&quot;0&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;prepare-a-aws-ec2-for-hands-on-learning&quot;&gt;Prepare a AWS EC2 for hands on learning&lt;/h2&gt;
+&lt;p&gt;As suggested in the video, one should setup an AWS EC2 for the hands on session.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 07 Feb 2017 00:00:00 +0100</pubDate>
+        <link>liufuyang.github.io/2017/02/07/learn-puppet.html</link>
+        <guid isPermaLink="true">liufuyang.github.io/2017/02/07/learn-puppet.html</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Understanding Precision and Recall</title>
+        <description>&lt;script type=&quot;math/tex; mode=display&quot;&gt;precision = \frac{true \space  positive} {no. \space  of \space predicted \space positive }&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;recall = \frac {true \space positive} {no. \space of \space actual \space positive}&lt;/script&gt;
+
+&lt;p&gt;If we increase the prediction bar from 0.5 to higher, this will predict y=1 only when we are very confident.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;High precision, lower recall -&amp;gt; confident about positive; (Precise on predicting positive, but you predict just very)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If we want to avoid &lt;strong&gt;false negatives&lt;/strong&gt; (for example, avoid missing too many case of cancer), we can decrease prediction threshold lower than 0.5.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Low precision, high recall -&amp;gt; avoid false negatives; (Not all precise but we cover more actual positive)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;how-do-we-compare-precision-and-recall-values&quot;&gt;How do we compare precision and recall values?&lt;/h2&gt;
+
+&lt;p&gt;Suppose we now have different algorithms and using them giving different precision and recall values, how do we judge which model has the best performance?&lt;/p&gt;
+
+&lt;table class=&quot;pure-table pure-table-bordered&quot;&gt;
+    &lt;thead&gt;
+    &lt;tr&gt;
+        &lt;th&gt;&lt;/th&gt;
+        &lt;th&gt;Precision (P)&lt;/th&gt;
+        &lt;th&gt;Recall (R)&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Algorithm 1 &lt;/td&gt;
+        &lt;td&gt;0.5&lt;/td&gt;
+        &lt;td&gt;0.4&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Algorithm 2&lt;/td&gt;
+        &lt;td&gt;0.7&lt;/td&gt;
+        &lt;td&gt;0.1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Algorithm 3&lt;/td&gt;
+        &lt;td&gt;0.02&lt;/td&gt;
+        &lt;td&gt;1.0&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p&gt;We need a single compare metric.&lt;/p&gt;
+
+&lt;h2 id=&quot;f1-score&quot;&gt;&lt;script type=&quot;math/tex&quot;&gt;F_1&lt;/script&gt; score:&lt;/h2&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;F_1 = 2 \frac{PR}{P+R}&lt;/script&gt;
+
+&lt;p&gt;Then simply run validation with different value of threshold to get a model with the highest &lt;script type=&quot;math/tex&quot;&gt;F_1&lt;/script&gt; value.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 20 Feb 2016 00:00:00 +0100</pubDate>
+        <link>liufuyang.github.io/2016/02/20/precision-and-recall.html</link>
+        <guid isPermaLink="true">liufuyang.github.io/2016/02/20/precision-and-recall.html</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>HelloWorld</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/assets/2016-02-12-helloworld/start.png&quot; alt=&quot;HelloWorld&quot; /&gt;&lt;em&gt;Above figure is from &lt;a href=&quot;http://waitbutwhy.com&quot;&gt;waitbutwhy&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Hello world! My name is Fuyang. Maybe I will continue using this blog to update the stuff I am learning for fun :)&lt;/p&gt;
+
+&lt;p&gt;Github Pages together with Jekyll could be a very nice solution for building a blog since it is relatively simple to set things up.&lt;/p&gt;
+
+&lt;p&gt;And locally I can just use Atom and git to edit and publish posts very easily. Also it is very easy to adding pictures and maths equations, writing a blog post now feels like writing a page in latex.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+function(){
+  this.stuff = &#39;looks good&#39;;
+}
+&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I love it :)&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;e^{i \pi} = -1&lt;/script&gt;
+
+&lt;p&gt;If you want to know how this page is built, check out &lt;a href=&quot;https://help.github.com/articles/using-jekyll-with-pages/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://github.com/barryclark/jekyll-now&quot;&gt;here(it didn’t work for me, but you can get the idea here)&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also a special thank to my colleague &lt;a href=&quot;http://rasmusbergpalm.github.io/2016/02/12/dense-codes.html&quot;&gt;Rasmus Berg Palm&lt;/a&gt;, from whom I copied the blog setup.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 13 Feb 2016 00:00:00 +0100</pubDate>
+        <link>liufuyang.github.io/2016/02/13/helloworld.html</link>
+        <guid isPermaLink="true">liufuyang.github.io/2016/02/13/helloworld.html</guid>
+        
+        
+      </item>
+    
+  </channel>
+</rss>
