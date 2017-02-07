@@ -17,3 +17,5 @@ github_username:  liufuyang
 
 # Build settings
 markdown: kramdown
+
+gems: [jekyll-youtube]
