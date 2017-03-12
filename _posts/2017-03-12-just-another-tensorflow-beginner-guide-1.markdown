@@ -5,7 +5,7 @@ date:   2017-03-12
 comments: true
 ---
 
-Just another Tensorflow beginner guide. As for myself I found it is difficult to find a step-by-step, easy to follow and practical-things-focused guide on Tensorflow 1.0, I decide to node some stuff down while learning Tensorflow so hopefully it can help me or somebody else out there as well.
+Just another Tensorflow beginner guide. As for myself I found it is difficult to find a step-by-step, easy to follow and practical-things-focused guide on Tensorflow 1.0, I decide to note some stuff down while learning Tensorflow so hopefully it can help me or somebody else out there as well.
 
 You are expected to have some Python background to be able to follow this guide. And it is for mac users. Linux and Windows user will need to change some of the installation commands accordingly. But those information are easy to find.
 
