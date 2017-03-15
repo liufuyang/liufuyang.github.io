@@ -28,7 +28,7 @@ Python 3.6.0
 It's totally okay for now if your `python --version` is still 2.7, we will use `virtualenvs` later to make sure your `python --version` will output version 3 info.
 
 
-### Install `virtualenvs` (highly recommended)
+### Install **virtualenvs** (highly recommended)
 
 This `virtualenvs` is highly recommended as it allows different projects on your computer to have different Python environment. You may checkout this http://docs.python-guide.org/en/latest/dev/virtualenvs/ or just do:
 
@@ -36,7 +36,7 @@ This `virtualenvs` is highly recommended as it allows different projects on your
 $ pip3 install virtualenv
 ```
 
-### Install autoenv (highly recommended)
+### Install **autoenv** (highly recommended)
 
 This `autoenv`tool is also highly recommended as it automatically switch the correct python environment for you when you cd into a folder. It uses a config file called `.env` file in your project directory, to switch shell Python environment to desired environment. Check it out here at [https://github.com/kennethreitz/autoenv](https://github.com/kennethreitz/autoenv) or just try install like this:
 ```
@@ -86,7 +86,7 @@ Python 3.6.0
 ```
 If you have info show up like that, perfect. 
 
-### Install Tensorflow v1.0.1:
+### Install **Tensorflow** v1.0.1:
 
 More info here [https://www.tensorflow.org/install/install_mac](https://www.tensorflow.org/install/install_mac) or just do:
 ```
@@ -130,8 +130,110 @@ with tf.Session() as sess:
     print(result)
 ```
 
-
-
 By running it you should see an output of **`42.0`**. (You might also see some tensorflow warning messages but I think we can neglect them for now.)
 
 Great, now we have a tensorflow super basic program working!
+
+### Let's try monitoring what Tensorflow does via **Tensorboard**
+
+You might have used IPython notebook before and enjoy doing the interactive way of making models or doing calculations. However tensorflow works a bit differently with normal python code. In a naive way to speaking, it seems to me that the tensorflow API makes you to **plan** your calculation job then you will need to open a session and let your calculation job run in that session, during which time the values of parameters you defined might not be directly exposed to you.
+
+In that way, the calculation can, perhaps run very efficiently, but you loose the accessibility of your defined parameters. In this sense, using IPython notebook with tensorflow might be not the most sense making way. (Again, I am new into this, so you are welcome to commit with a different opinion :) )
+
+Lucky enough, Tensorflow has provided us a tool called `tensorboard` to help us monitoring the calculation and also visualize the calculation **plan**.
+
+Let's try a simple example to see if we could use the Tensorboard to see it's plan (or perhaps more precisely, it's graph) illustrated. 
+
+In the previous `example-1.basic.py` code, add a line after import tensorflow and a line just above `sess.run()`
+```python
+# example-1.basic.py
+import tensorflow as tf
+from datetime import datetime
+
+LOG_PATH = './tmp/example-1/' + datetime.now().isoformat()
+
+a = tf.placeholder("float")
+b = tf.placeholder("float")
+
+y = tf.multiply(a, b)
+
+with tf.Session() as sess:
+    # create log writer object
+    writer = tf.summary.FileWriter(LOG_PATH, graph=graph=sess.graph)
+    
+    # perform calculation 
+    result = sess.run(y, feed_dict={a: 6, b: 7})
+    print(result)
+```
+
+Then open another shell terminal and cd into `tf-learn` folder (you have to do this under directory `tf-learn` otherwise check the `--logdir` parameter carefully and make sure it targets the same defined in python code `LOG_PATH`), you can run
+```
+$ tensorboard --logdir=./tmp/example-1 --port=8001
+```
+to start Tensorboard.
+
+Now, run your code again with `python example-1-basic.py` then open [localhost:8001](localhost:8001) in your browser and go to the tab `graphs` then you should be able to see this:
+![example1.1](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.1.png)*Tensorboard graph*
+
+You can click on those nodes to check for some extra info. Note that those note labels are still original data types and operation types. You can make them more easy to read by assigning `name` attribute when declaring. 
+
+For example, we can do something like this:
+```Python
+...
+a = tf.placeholder(tf.float32, name='a')
+b = tf.placeholder(tf.float32, name='b')
+
+y = tf.multiply(a, b, name='y')
+...
+```
+Then press the "refreshing" button (or you may need to refresh the Tensorboard page), you should be able to see a new run result, selecting that result then see the graph with labels named as `a`, `b` and `y`
+
+![example1.2](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.2.png)*Tensorboard graph with names*
+
+### More about Tensorboard - watch the change of a scalar
+
+Now, let's try to do something more. Imagine we are doing a loop of calculation to generate y as fibonacci numbers, and each time we would like to know the value of y and we hope to monitoring it's change via Tensorboard, you can do something like this (just slight change of the code above):
+```python
+# example-1.basic.py
+import tensorflow as tf
+from datetime import datetime
+
+LOG_PATH = './tmp/example-1/' + datetime.now().isoformat()
+
+a = tf.placeholder(tf.float32, name='a')
+b = tf.placeholder(tf.float32, name='b')
+
+y = tf.add(a, b, name='y')
+
+sess = tf.Session()
+
+tf.summary.scalar('Value of y', y)
+merged = tf.summary.merge_all()
+writer = tf.summary.FileWriter(LOG_PATH, graph=sess.graph)
+
+_a = 1
+_b = 2
+for i in range(10):
+    # perform calculation 
+    summary, _y = sess.run([merged, y], feed_dict={a: _a, b: _b})
+    writer.add_summary(summary, i)
+    
+    _a = _b
+    _b = _y
+    
+    print(_y)
+```
+You may notice the may difference here is that we defiend a `tf.summary.scalar` on `y` and give it a name as `Value of y`. Then when we do `session.run()` we pass both merged summary `merged` and `y` into it, then it will return a summary and an actual numpy value of `y`.
+
+Then we write the summary and shift the `_a, _b` for the input for next round.
+
+Now you can navigate to the "scalars" tab and see your `Value_of_y` plot:
+
+![example1.3](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.3.png)*Tensorboard scalar plot*
+
+And the graph will be updated with a summary output:
+![example1.4](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.4.png)*Tensorboard graph with names*
+
+Okay, enough for today. At least now you can use Tensorflow to do basic calculations and monitoring the variables. We will continue on with some basic machine learning stuff in the next part.
+
+Thank you for reading so far.
