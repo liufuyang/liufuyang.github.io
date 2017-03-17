@@ -173,7 +173,7 @@ $ tensorboard --logdir=./tmp/example-1 --port=8001
 to start Tensorboard.
 
 Now, run your code again with `python example-1-basic.py` then open [localhost:8001](localhost:8001) in your browser and go to the tab `graphs` then you should be able to see this:
-![example1.1](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.1.png)*Tensorboard graph*
+![example1.1](/assets/tensorflow/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.1.png)*Tensorboard graph*
 
 You can click on those nodes to check for some extra info. Note that those note labels are still original data types and operation types. You can make them more easy to read by assigning `name` attribute when declaring. 
 
@@ -188,7 +188,7 @@ y = tf.multiply(a, b, name='y')
 ```
 Then press the "refreshing" button (or you may need to refresh the Tensorboard page), you should be able to see a new run result, selecting that result then see the graph with labels named as `a`, `b` and `y`
 
-![example1.2](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.2.png)*Tensorboard graph with names*
+![example1.2](/assets/tensorflow/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.2.png)*Tensorboard graph with names*
 
 ### More about Tensorboard - watch the change of a scalar
 
@@ -229,10 +229,10 @@ Then we write the summary and shift the `_a, _b` for the input for next round.
 
 Now you can navigate to the "scalars" tab and see your `Value_of_y` plot:
 
-![example1.3](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.3.png)*Tensorboard scalar plot*
+![example1.3](/assets/tensorflow/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.3.png)*Tensorboard scalar plot*
 
 And the graph will be updated with a summary output:
-![example1.4](/assets/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.4.png)*Tensorboard graph with names*
+![example1.4](/assets/tensorflow/2017-03-12-just-another-tensorflow-beginner-guide-1/example1.4.png)*Tensorboard graph with names*
 
 Okay, enough for today. At least now you can use Tensorflow to do basic calculations and monitoring the variables. We will continue on with some basic machine learning stuff in the next part.
 
