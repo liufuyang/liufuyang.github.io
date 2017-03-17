@@ -127,9 +127,11 @@ with tf.Session() as sess:
 
 Now after use python to run this python file, then start up tensooboard with `$ tensooboard --logdir=./tmp/example-2 --port=8002 --reload_interval=5`. Now you can
 open in browser at `http://localhost:8002/` then you should be able to see the 
-computation graph and summary metrics such as `cost` and `accuracy`.
+computation graph:
 
-![example1.graph](/assets/tensorflow/2017-03-17-just-another-tensorflow-beginner-guide-2/example1.graph.png)*Tensorboard graph for simple MNIST model*
+![example1.graph](/assets/tensorflow/2017-03-17-just-another-tensorflow-beginner-guide-2/example1.graph.png)
+*Tensorboard graph for simple MNIST model*
+
 Note that in the code we have used `with tf.name_scope('xxx'):` which is used to
 group the graph components.
 
