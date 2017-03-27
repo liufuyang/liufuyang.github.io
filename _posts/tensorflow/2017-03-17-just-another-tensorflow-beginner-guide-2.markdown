@@ -8,7 +8,9 @@ comments: true
 As we have tried some basic Tensorflow code and Tensorboard function in [Part 1]({{ site.baseurl }}{% post_url tensorflow/2017-03-12-just-another-tensorflow-beginner-guide-1 %}), here we are going to try some examples that is 
 a bit more complicated
 
-# Example 1 - The MNIST dataset
+## Study case 1: The MNIST dataset
+
+### Simple model - no hidden layer
 
 You've probably already heard about `MNIST` dataset which contains lots of hand written digits pixel data.
 I will not be able to give detailed explanations on how to use tensorflow to do a neural network to classify 
@@ -16,7 +18,7 @@ those hand written digits but there are many good resource online. I will link a
 read them.
 
 But anyway here is a working example [I took from here](http://ischlag.github.io/2016/06/04/how-to-use-tensorboard/) that use TF to train a simple neural net to classify MNIST dataset, 
-which by the end can reach 92% accuracy.
+which by the end can reach 92% accuracy (without any hidden layer).
 
 ```python
 # example-2-simple-mnist.py
@@ -120,7 +122,7 @@ with tf.Session() as sess:
     print('Accuracy: {}'.format(accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels})))
     print('done')
 
-# tensooboard --logdir=./tmp/example-2 --port=8002 --reload_interval=5
+# tensorboard --logdir=./tmp/example-2 --port=8002 --reload_interval=5
 # You can run the following js code in broswer console to make tensooboard to do auto-refresh
 # setInterval(function() {document.getElementById('reload-button').click()}, 5000);
 ```
@@ -138,3 +140,72 @@ group the graph components.
 And on the scalar tab you can see some of those scalar summary such as the cost and 
 accuracy for training and testing, such as:
 ![example1.summary](/assets/tensorflow/2017-03-17-just-another-tensorflow-beginner-guide-2/example1.summary.png)*Tensorboard train accuracy summary for simple MNIST model*
+
+---
+---
+<br><br>
+### A bit more complex - Add one hidden layer
+
+As we could see the 92% test accuracy of previous run is not too amazing, 
+as we don't have any hidden layer between the input and output vectors. 
+
+Thus we can simply add one hidden layer and see if it will help with increasing 
+accuracy in someway. Theoretically it should help as long as the model is not overfitting. 
+
+We can add those changes in the code to add an extra layer:
+* Add a parameter somewhere on the top part of code to define the hidden layer size - let's try with 200 
+    ```python
+    layer1_size = 200
+    ```
+* Add another weight `W1` and bias `b1` as follow. Note that here we need to initialize 
+those weights with `tf.truncated_normal()` method instead of initializing them as zeros like before.
+This is because (if I guess correctly) that with hidden layers existing, the feed forward and back propagation
+will not be able to contribute any value changes if those weights are initialized as zeros. (You might notice this if you forgot to update the initialization code)
+    ```python
+    with tf.name_scope("weights"):
+        W1 = tf.Variable(tf.truncated_normal([784, layer1_size], stddev=0.1))
+        W = tf.Variable(tf.truncated_normal([layer1_size, 10], stddev=1.0))
+
+    with tf.name_scope("biases"):
+        b1 = tf.Variable(tf.zeros([layer1_size]))
+        b = tf.Variable(tf.zeros([10]))
+    ```
+* Then add the hidden layer as:
+    ```python
+    with tf.name_scope('hidden_layers'):
+        y1 = tf.nn.relu(tf.matmul(x, W1) + b1)
+    ```
+* Next update the softmax output layer to use hiddlen layer `y1`, also use 
+`tf.nn.softmax_cross_entropy_with_logits()` to calculate the cost:
+    ```python
+    with tf.name_scope("softmax"):
+        ylogits = tf.matmul(y1, W) + b
+        y = tf.nn.softmax(ylogits)
+
+    with tf.name_scope('cross_entropy'):
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=ylogits, labels=y_)
+        cross_entropy = tf.reduce_mean(cross_entropy)
+    ```
+* Plus you might want to try a different optimizer:
+    ```python
+    with tf.name_scope('train'):
+        train_op = tf.train.AdamOptimizer().minimize(cross_entropy)
+    ```
+That should be it, no other change is needed for the rest of the code. And 
+if you run this code with one hidden layer (200 nodes), you should get the test
+accuracy above 96% :)
+
+For those who want to make it perform even better, I think this [Tensorflow and deep learning without a PhD](https://codelabs.developers.google.com/codelabs/cloud-tensorflow-mnist/index.html) is
+a good place to digging the MNIST dataset deeper.
+
+---
+---
+<br><br>
+## Study case 2: A simple sentiment analysis
+
+We can now try a simple sentiment analysis using most of code above but this time 
+the fun part is the data will be a bit more realistic and one needs to some simple 
+natural language processing on the incoming raw data.
+
+... (to be continued)
+
