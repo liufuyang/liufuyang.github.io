@@ -209,3 +209,8 @@ natural language processing on the incoming raw data.
 
 ... (to be continued)
 
+
+## Useful learning materials
+* [Google codelab - Tensorflow and deep learning, without a Phd](https://codelabs.developers.google.com/codelabs/cloud-tensorflow-mnist/#0) - very 
+good examples on TF and deep learning and if you go for the convolutional networks you can reach accuracy of 99% on MNIST dataset
+* [pythonprogramming.net](https://www.youtube.com/watch?v=oYbVFhK_olY&index=43&list=PLQVvvaa0QuDfKTOs3Keq_kaG2P55YRn5v)
