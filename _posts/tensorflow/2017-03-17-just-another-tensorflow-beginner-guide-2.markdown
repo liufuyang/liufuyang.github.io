@@ -300,6 +300,7 @@ Looks like after epoch 3 we start to getting into a overfitting situation where 
 the test accuracy is relatively low. 
 
 Now you may use some of the common ideas on tackle this overfitting issue, just to name a few here:
+* Get more data!!
 * Train with a smaller neural network
 * Early stopping
 * Train many big nets on random subsets of the data and average their predictions.
