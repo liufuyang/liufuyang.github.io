@@ -207,8 +207,133 @@ We can now try a simple sentiment analysis using most of code above but this tim
 the fun part is the data will be a bit more realistic and one needs to some simple 
 natural language processing on the incoming raw data.
 
-... (to be continued)
+You can get some sample code and the train test data [here](https://github.com/liufuyang/kaggle-youtube-8m/tree/master/tf-learn/example-3). 
+And our example here is pretty much a copy of the tutorial of [this youtube channel](https://www.youtube.com/watch?v=YFxVHD2TNII&index=49&list=PLQVvvaa0QuDfKTOs3Keq_kaG2P55YRn5v). 
+So I guess you can follow the video as well, it discuss much more info than what I will write here.
 
+### First step: raw data to feature vectors
+Basically, the first thing we need to do is to parse the input text and change them into 
+vectors with digits so we could feed them into a neural network. There are many ways of 
+doing this, such as `bag of words`, `word2vec` and so on. We will just follow the video tutorial 
+and use a very simple bag of words model and the script doing is called `create_sentiment_featuresets.py`.
+
+You can run command as below, or check the info [here about nltk](http://www.nltk.org/data.html#command-line-installation).
+(Also make sure the train and test csv file are in the same folder)
+```
+$ cd example-3
+$ pip install nltk
+$ python -m nltk.downloader punkt wordnet
+$ python create_sentiment_featuresets.py
+```
+
+The create_sentiment_featuresets.py will dump the extracted feature vectors into
+a file under folder tmp and called `sentiment_set.pickle`, which will be used to load those 
+train test input data in the very next step.
+
+### Second step: train a model
+Then for the second step, one can simply use the one layer model we made above for MNIST data, just 
+a few places on loading data needs to be updated.
+
+Such as the data loading part is replaces as:
+```python
+# example-3.py
+...
+train_x, train_y, test_x, test_y = pickle.load( open('tmp/sentiment_set.pickle', 'rb' ) )
+...
+```
+
+And the session running loop is now looking like:
+```python
+# example-3.py
+...
+with tf.Session() as sess:
+    # variables need to be initialized before we can use them
+    sess.run(tf.initialize_all_variables())
+
+    # create log writer object
+    writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph())
+        
+    # perform training cycles
+    for epoch in range(training_epochs):
+        # number of batches in one epoch
+        batch_count = int(len(train_x)/batch_size)
+        i = 0
+        while i < len(train_x):
+            start = i
+            end = i + batch_size
+            batch_x = np.array(train_x[start:end])
+            batch_y = np.array(train_y[start:end])
+            
+            # perform the operations we defined earlier on batch
+            _, train_cost, train_acc, _train_cost_summary, _train_acc_summary = \
+                sess.run([train_op, cross_entropy, accuracy, train_cost_summary, train_acc_summary], 
+                    feed_dict={x: batch_x, y_: batch_y})
+            # write log
+            writer.add_summary(_train_cost_summary, epoch * batch_count + i)
+            writer.add_summary(_train_acc_summary, epoch * batch_count + i)
+
+            if i % 100 == 0:
+                # for log on test data:
+                test_cost, test_acc, _test_cost_summary, _test_acc_summary = \
+                    sess.run([cross_entropy, accuracy, test_cost_summary, test_acc_summary], 
+                        feed_dict={x: test_x, y_: test_y})
+                # write log
+                writer.add_summary(_test_cost_summary, epoch * batch_count + i)
+                writer.add_summary(_test_acc_summary, epoch * batch_count + i)
+                
+                print('Epoch {0:3d}, Batch {1:3d} | Train Cost: {2:.2f} | Test Cost: {3:.2f} | Accuracy batch train: {4:.2f} | Accuracy test: {5:.2f}'
+                    .format(epoch, i, train_cost, test_cost, train_acc, test_acc))
+            i += batch_size
+    print('Accuracy: {}'.format(accuracy.eval(feed_dict={x: test_x , y_: test_y})))
+    print('done')
+```
+
+Now run this `example-3.py` and you should see output such as
+```
+...
+Epoch   5, Batch 8300 | Train Cost: 0.33 | Test Cost: 0.73 | Accuracy batch train: 0.85 | Accuracy test: 0.65
+Epoch   5, Batch 8400 | Train Cost: 0.28 | Test Cost: 0.73 | Accuracy batch train: 0.87 | Accuracy test: 0.65
+Epoch   5, Batch 8500 | Train Cost: 0.15 | Test Cost: 0.73 | Accuracy batch train: 0.97 | Accuracy test: 0.65
+Accuracy: 0.6538461446762085
+```
+Looks like after epoch 3 we start to getting into a overfitting situation where the train accuracy is very high and 
+the test accuracy is relatively low. 
+
+Now you may use some of the common ideas on tackle this overfitting issue, just to name a few here:
+* Train with a smaller neural network
+* Early stopping
+* Train many big nets on random subsets of the data and average their predictions.
+* Train the big neural net with dropout in the hidden units.
+* Train many different models - neural nets, SVMs, decision trees - and average their predictions.
+* Data augmentation
+* Add un-supervised pre-training
+
+I will just try method 1 here, make the neural network smaller see what happens. 
+
+So for the parameter `layer1_size` let's change it from 200 to 32:
+```
+...
+Epoch   5, Batch 8300 | Train Cost: 0.52 | Test Cost: 0.62 | Accuracy batch train: 0.73 | Accuracy test: 0.66
+Epoch   5, Batch 8400 | Train Cost: 0.41 | Test Cost: 0.62 | Accuracy batch train: 0.81 | Accuracy test: 0.66
+Epoch   5, Batch 8500 | Train Cost: 0.35 | Test Cost: 0.62 | Accuracy batch train: 0.90 | Accuracy test: 0.66
+Accuracy: 0.6622889041900635
+```
+
+Looks like the results got better. (However we might just got a bit lucky here and the model is initialized randomly
+so you might have a different result here)
+
+## Summary
+Congratulations, now you have used Tensorflow and your own raw data to make a simple model that can predict
+the sentiment on a given input movie comment. Apparently it is not that precise yet but I think we now have 
+a good ground work to develop it further, with some feature engineering (for example perhaps use bigrams as well) together
+with some methods mentioned above for overfitting.
+
+Later on I would like to try to use google cloud to help us do the calculation, instead of running the calculation locally.
+It might not make much of a sense for this small example but when you once have some big data on hands, doing cloud 
+computation might be one of the solution as your local laptop might not be powerful enough.
+
+---
+<br>
 
 ## Useful learning materials
 * [Google codelab - Tensorflow and deep learning, without a Phd](https://codelabs.developers.google.com/codelabs/cloud-tensorflow-mnist/#0) - very 
