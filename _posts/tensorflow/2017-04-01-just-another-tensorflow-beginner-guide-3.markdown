@@ -199,8 +199,7 @@ This model gives an similar performance as the Tensorflow model showed in [Part 
 
 ## About using GPU
 
-To setup a GPU working on your Ubuntu system, you can follow [this guide](https://medium.com/towards-data-science/building-your-own-deep-learning-box-47b918aea1eb). With a GPU doing the calculation, the training speed on GPU for this demo code is **10 times** faster than my Mac 15-inch 
-laptop. 
+To setup a GPU working on your Ubuntu system, you can follow [this guide](https://medium.com/towards-data-science/building-your-own-deep-learning-box-47b918aea1eb). With a GPU doing the calculation, the training speed on GPU for this demo code is **40 times** faster than my Mac 15-inch laptop.(For one epoch, it takes 100+ seconds on CPU, 3 seconds on GPU) 
 
 ```
 I tensorflow/core/common_runtime/gpu/gpu_device.cc:885] Found device 0 with properties:
@@ -212,21 +211,21 @@ Free memory: 3.55GiB
 I tensorflow/core/common_runtime/gpu/gpu_device.cc:906] DMA: 0
 I tensorflow/core/common_runtime/gpu/gpu_device.cc:916] 0:   Y
 I tensorflow/core/common_runtime/gpu/gpu_device.cc:975] Creating TensorFlow device (/gpu:0) -> (device: 0, name: GeForce GTX 980, pci bus id: 0000:01:00.0)
-60000/60000 [==============================] - 8s - loss: 0.2125 - acc: 0.9352 - val_loss: 0.0402 - val_acc: 0.9857
+60000/60000 [==============================] - 4s - loss: 0.2125 - acc: 0.9352 - val_loss: 0.0402 - val_acc: 0.9857
 Epoch 2/15
-60000/60000 [==============================] - 7s - loss: 0.0725 - acc: 0.9783 - val_loss: 0.0284 - val_acc: 0.9907
+60000/60000 [==============================] - 3s - loss: 0.0725 - acc: 0.9783 - val_loss: 0.0284 - val_acc: 0.9907
 Epoch 3/15
-60000/60000 [==============================] - 7s - loss: 0.0534 - acc: 0.9844 - val_loss: 0.0293 - val_acc: 0.9900
+60000/60000 [==============================] - 3s - loss: 0.0534 - acc: 0.9844 - val_loss: 0.0293 - val_acc: 0.9900
 ...
 ...
 Epoch 12/15
-60000/60000 [==============================] - 7s - loss: 0.0165 - acc: 0.9948 - val_loss: 0.0185 - val_acc: 0.9947
+60000/60000 [==============================] - 3s - loss: 0.0165 - acc: 0.9948 - val_loss: 0.0185 - val_acc: 0.9947
 Epoch 13/15
-60000/60000 [==============================] - 7s - loss: 0.0165 - acc: 0.9947 - val_loss: 0.0259 - val_acc: 0.9928
+60000/60000 [==============================] - 3s - loss: 0.0165 - acc: 0.9947 - val_loss: 0.0259 - val_acc: 0.9928
 Epoch 14/15
-60000/60000 [==============================] - 7s - loss: 0.0153 - acc: 0.9951 - val_loss: 0.0221 - val_acc: 0.9948
+60000/60000 [==============================] - 3s - loss: 0.0153 - acc: 0.9951 - val_loss: 0.0221 - val_acc: 0.9948
 Epoch 15/15
-60000/60000 [==============================] - 7s - loss: 0.0156 - acc: 0.9949 - val_loss: 0.0212 - val_acc: 0.9940
+60000/60000 [==============================] - 3s - loss: 0.0156 - acc: 0.9949 - val_loss: 0.0212 - val_acc: 0.9940
 [0.021206631667710734, 0.99399999999999999]
 ```
 
