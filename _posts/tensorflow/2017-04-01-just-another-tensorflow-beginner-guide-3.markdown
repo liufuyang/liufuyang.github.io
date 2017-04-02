@@ -12,6 +12,8 @@ You probably have already head about [Keras](https://keras.io/) - a high-level n
 If you compare a Keras version of a simple one-layer implementation on the MNIST data, you could feel it's much easier
 than the code we shown in [Part 2]({{ site.baseurl }}{% post_url tensorflow/2017-03-17-just-another-tensorflow-beginner-guide-2 %})
 
+### Simple Feed-Forward Network for MNIST
+
 ```python
 from __future__ import print_function
 
@@ -64,7 +66,13 @@ print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 ```
 
-A more complicated version of a convelutional neural network looks like this:
+Note that the training dataset is structured as a 3-dimensional array of instance, image width and image height. For a multi-layer perceptron model we must reduce the images down into a vector of pixels. In this case the 28×28 sized images will be 784 pixel input values.
+
+We can do this transform easily using the `reshape()` function on the NumPy array. We can also reduce our memory requirements by forcing the precision of the pixel values to be 32 bit, the default precision used by Keras anyway.
+
+### Convolutional Neural Network for MNIST
+
+A more complicated version of the previous feed-forward model could be a convelutional neural network looks like this:
 (or you may want to checkout post [here](https://elitedatascience.com/keras-tutorial-deep-learning-in-python) and [here](http://machinelearningmastery.com/handwritten-digit-recognition-using-convolutional-neural-networks-python-keras/))
 ```python
 import numpy as np
@@ -98,8 +106,8 @@ Y_test = np_utils.to_categorical(y_test, 10)
 # 7. Define model architecture
 model = Sequential()
 
-model.add(Convolution2D(80, (6, 6), activation='relu', input_shape=(28,28,1)))
-model.add(Convolution2D(60, (6, 6), activation='relu'))
+model.add(Convolution2D(32, (6, 6), activation='relu', input_shape=(28,28,1)))
+model.add(Convolution2D(20, (6, 6), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Dropout(0.25))
 
@@ -123,6 +131,17 @@ score = model.evaluate(X_test, Y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
 ```
+
+Convolutional neural networks are more complex than standard multi-layer perceptrons, so we will start by using a simple structure to begin with that uses all of the elements for state of the art results. Below summarizes the network architecture.
+
+1. The first hidden layer is a convolutional layer called a Convolution2D. The layer has 32 feature maps, which with the size of 6×6 and a rectifier activation function. This is the input layer, expecting images with the structure outline above [width, height, pixels].
+2. The next hidden layer is also a convolutional layer. The layer has 20 feature maps, which with the size of 6×6 and a rectifier activation function. 
+3. Next we define a pooling layer that takes the max called MaxPooling2D. It is configured with a pool size of 2×2.
+4. The next layer is a regularization layer using dropout called Dropout. It is configured to randomly exclude 25% of neurons in the layer in order to reduce overfitting.
+5. Next is a layer that converts the 2D matrix data to a vector called Flatten. It allows the output to be processed by standard fully connected layers.
+6. Next a fully connected layer with 128 neurons and rectifier activation function.
+7. The next layer is a Dropout again. As there will be many weights generated on the previous layer, it is configured to randomly exclude 40% of neurons in the layer in order to reduce overfitting.
+8. Finally, the output layer has 10 neurons for the 10 classes and a softmax activation function to output probability-like predictions for each class.
 
 With this implementation the test accuracy can go up to 99.3%.
 

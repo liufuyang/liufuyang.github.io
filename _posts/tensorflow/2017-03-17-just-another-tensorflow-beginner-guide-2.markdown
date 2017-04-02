@@ -239,6 +239,8 @@ Such as the data loading part is replaces as:
 # example-3.py
 ...
 train_x, train_y, test_x, test_y = pickle.load( open('tmp/sentiment_set.pickle', 'rb' ) )
+train_x = train_x.toarray() # as we stored the data as sparse matrix, restore them back to numpy array
+test_x = test_x.toarray()
 ...
 ```
 
