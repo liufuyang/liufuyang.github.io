@@ -74,6 +74,18 @@ We can do this transform easily using the `reshape()` function on the NumPy arra
 
 A more complicated version of the previous feed-forward model could be a convelutional neural network looks like this:
 (or you may want to checkout post [here](https://elitedatascience.com/keras-tutorial-deep-learning-in-python) and [here](http://machinelearningmastery.com/handwritten-digit-recognition-using-convolutional-neural-networks-python-keras/))
+
+As the post suggested, when using the Theano backend (not sure if it is the same with Tensorflow backend), you must explicitly declare a dimension for the depth of the input image. For example, a full-color image with all 3 RGB channels will have a depth of 3.
+
+Our MNIST images only have a depth of 1, but we must explicitly declare that.
+We do this via the reshape function:
+```
+X_train = X_train.reshape(X_train.shape[0], 28, 28, 1)
+X_test = X_test.reshape(X_test.shape[0], 28, 28, 1)
+```
+
+Full code here:
+
 ```python
 import numpy as np
 np.random.seed(123)  # for reproducibility
@@ -113,7 +125,7 @@ model.add(Dropout(0.25))
 
 model.add(Flatten())
 model.add(Dense(128, activation='relu'))
-model.add(Dropout(0.5))
+model.add(Dropout(0.4))
 model.add(Dense(10, activation='softmax'))
 
 # 8. Compile model
@@ -134,16 +146,18 @@ print('Test accuracy:', score[1])
 
 Convolutional neural networks are more complex than standard multi-layer perceptrons, so we will start by using a simple structure to begin with that uses all of the elements for state of the art results. Below summarizes the network architecture.
 
-1. The first hidden layer is a convolutional layer called a Convolution2D. The layer has 32 feature maps, which with the size of 6×6 and a rectifier activation function. This is the input layer, expecting images with the structure outline above [width, height, pixels].
+1. The first hidden layer is a convolutional layer called a Convolution2D. The layer has 32 feature maps, which with the size of 6×6 and a rectifier activation function. It’s the first convolution layer, but you don’t need to explicitly declare a separate input layer. Each layer in Keras will have an input shape and an output shape. Keras automatically sets the input shape as the output shape from the previous layer, but for the first layer, you’ll need to set that as a parameter. The "input" layer, expecting images with the structure outline above [width, height, pixels].
 2. The next hidden layer is also a convolutional layer. The layer has 20 feature maps, which with the size of 6×6 and a rectifier activation function. 
 3. Next we define a pooling layer that takes the max called MaxPooling2D. It is configured with a pool size of 2×2.
-4. The next layer is a regularization layer using dropout called Dropout. It is configured to randomly exclude 25% of neurons in the layer in order to reduce overfitting.
+4. The next layer is a regularization layer using dropout called Dropout. It is configured to randomly exclude 25% of neurons in the layer in order to reduce overfitting. In Keras, Dropout applies to just the layer preceding it. (It technically applies it to its own inputs, but its own inputs are just the outputs from the layer preceding it.)
 5. Next is a layer that converts the 2D matrix data to a vector called Flatten. It allows the output to be processed by standard fully connected layers.
 6. Next a fully connected layer with 128 neurons and rectifier activation function.
 7. The next layer is a Dropout again. As there will be many weights generated on the previous layer, it is configured to randomly exclude 40% of neurons in the layer in order to reduce overfitting.
 8. Finally, the output layer has 10 neurons for the 10 classes and a softmax activation function to output probability-like predictions for each class.
 
 With this implementation the test accuracy can go up to 99.3%.
+
+More about CNN can be see [here](http://cs231n.github.io/convolutional-networks/#conv)
 
 ## Simple sentiment analysis - Keras version
 
