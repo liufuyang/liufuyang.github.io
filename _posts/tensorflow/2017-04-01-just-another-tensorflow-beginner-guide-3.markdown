@@ -70,6 +70,8 @@ Note that the training dataset is structured as a 3-dimensional array of instanc
 
 We can do this transform easily using the `reshape()` function on the NumPy array. We can also reduce our memory requirements by forcing the precision of the pixel values to be 32 bit, the default precision used by Keras anyway.
 
+With this simple 2 layers implementation the test accuracy can go up to 98.2%.
+
 ### Convolutional Neural Network for MNIST
 
 A more complicated version of the previous feed-forward model could be a convelutional neural network looks like this:
@@ -155,7 +157,7 @@ Convolutional neural networks are more complex than standard multi-layer percept
 7. The next layer is a Dropout again. As there will be many weights generated on the previous layer, it is configured to randomly exclude 40% of neurons in the layer in order to reduce overfitting.
 8. Finally, the output layer has 10 neurons for the 10 classes and a softmax activation function to output probability-like predictions for each class.
 
-With this implementation the test accuracy can go up to 99.3%.
+With this CNN implementation the test accuracy can go up to 99.3%.
 
 More about CNN can be see [here](http://cs231n.github.io/convolutional-networks/#conv)
 
