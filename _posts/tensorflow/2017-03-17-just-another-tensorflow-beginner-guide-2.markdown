@@ -207,7 +207,7 @@ We can now try a simple sentiment analysis using most of code above but this tim
 the fun part is the data will be a bit more realistic and one needs to some simple 
 natural language processing on the incoming raw data.
 
-You can get some sample code and the train test data [here](https://github.com/liufuyang/kaggle-youtube-8m/tree/master/tf-learn/example-3). 
+You can get some sample code and the train test data [here](https://github.com/liufuyang/kaggle-youtube-8m/tree/master/tf-learn/example-3-sentiment). 
 And our example here is pretty much a copy of the tutorial of [this youtube channel](https://www.youtube.com/watch?v=YFxVHD2TNII&index=49&list=PLQVvvaa0QuDfKTOs3Keq_kaG2P55YRn5v). 
 So I guess you can follow the video as well, it discuss much more info than what I will write here.
 
