@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Just another Tensorflow beginner guide (Part4 - Google Cloud)"
+title:  "Just another Tensorflow beginner guide (Part4 - Google Cloud ML + GUP + Keras)"
 date:   2017-04-02
 comments: true
 ---
@@ -11,7 +11,9 @@ Now, let's try train our simple sentiment machine learning model on Google cloud
 
 Note that we will use the Tensorflow sample code created in the previous post - [Part 2 - example-3.py]({{ site.baseurl }}{% post_url tensorflow/2017-03-17-just-another-tensorflow-beginner-guide-2 %})
 
-## Prepare your Google Cloud Machine Learning Engine
+## Google Cloud Machine Learning Engine - Tensorflow
+
+### Prepare your Google Cloud Machine Learning Engine
 Firstly follow this guide below
 [https://cloud.google.com/ml-engine/docs/quickstarts/command-line](https://cloud.google.com/ml-engine/docs/quickstarts/command-line)
 
@@ -127,7 +129,7 @@ python -m tensorflow.tensorboard --logdir=./tmp/example-5/logs --port=8000 --rel
 
 Then you should be all set for running the job on the Google Cloud.
 
-### Running on cloud
+### Running on cloud (with GPU)
 * Firstly create a config file `config=trainer/cloudml-gpu.yaml` under folder trainer:
     ```
     trainingInput:
@@ -193,7 +195,197 @@ writer.flush()
 ```
 ([Info here](https://github.com/tensorflow/tensorflow/issues/2353))
 
+Contragulations, now you have made a simple Tensorflow model and trained on Google Cloud with a Tesla K80 graphic card.
+
+---
+---
+<br> <br>
+## Google Cloud Machine Learning Engine - Keras
+
+Naively thinking, if I just change the Tensorflow code to a Keras code,
+with the same way of loading training data, it should more or less working on Google Cloud ML engine, right?
+
+Let's give it a try.
+
+### Keras code that works locally:
+
+Now I will just post a Keras version of the above TF model here (for your convenience I will just put all the code here):
+
+```python
+# example5-keras.py
+import numpy as np
+np.random.seed(42)
+import tensorflow as tf
+tf.set_random_seed(42)
+from tensorflow.python.lib.io import file_io
+from datetime import datetime
+import time
+# import cPickle as pickle
+import pickle
+import argparse
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+from keras.optimizers import RMSprop
+
+# reset everything to rerun in jupyter
+tf.reset_default_graph()
+
+batch_size = 100
+num_classes = 2
+epochs = 10
+
+N_X = 423 # len(train_x[0])
+layer1_size = 32
+
+def train_model(train_file='sentiment_set.pickle', job_dir='./tmp/example-5', **args):
+    logs_path = job_dir + '/logs/' + datetime.now().isoformat()
+    print('-----------------------')
+    print('Using train_file located at {}'.format(train_file))
+    print('Using logs_path located at {}'.format(logs_path))
+    print('-----------------------')
+    file_stream = file_io.FileIO(train_file, mode='r')
+    x_train, y_train, x_test, y_test  = pickle.load(file_stream)
+    
+    x_train = x_train.toarray()
+    x_test = x_test.toarray()
+    
+    x_train /= np.max(x_train)
+    x_test /= np.max(x_test)
+
+    print(x_train.shape, y_train.shape, 'train samples,', type(x_train[0][0]), ' ', type(y_train[0][0]))
+    print(x_test.shape,  y_test.shape,  'test samples,',  type(x_test[0][0]),  ' ', type(y_train[0][0]))
+
+    # convert class vectors to binary class matrices. Our input already made this. No need to do it again
+    # y_train = keras.utils.to_categorical(y_train, num_classes) 
+    # y_test = keras.utils.to_categorical(y_test, num_classes)
+
+    model = Sequential()
+    model.add(Dense(layer1_size, activation='relu', input_shape=(N_X,)))
+    model.add(Dropout(0.2))
+    # Already overfitting, no need to add this extra layer
+    # model.add(Dense(layer1_size, activation='relu'))
+    # model.add(Dropout(0.2))
+    model.add(Dense(num_classes, activation='softmax'))
+
+    model.summary()
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=RMSprop(),
+                  metrics=['accuracy'])
+
+    history = model.fit(x_train, y_train,
+                        batch_size=batch_size,
+                        epochs=epochs,
+                        verbose=1,
+                        validation_data=(x_test, y_test)
+                        )
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1])
+    
+    model.save('model.h5')
+    
+    # Save model.h5 on to google storage
+    with file_io.FileIO('model.h5', mode='r') as input_f:
+        with file_io.FileIO(job_dir + '/model.h5', mode='w+') as output_f:
+            output_f.write(input_f.read())
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    # Input Arguments
+    parser.add_argument(
+      '--train-file',
+      help='GCS or local paths to training data',
+      required=True
+    )
+    parser.add_argument(
+      '--job-dir',
+      help='GCS location to write checkpoints and export models',
+      required=True
+    )
+    args = parser.parse_args()
+    arguments = args.__dict__
+    
+    train_model(**arguments)
+```
+
+It turned out that locally it works with gcloud command:
+```
+gcloud ml-engine local train \
+  --module-name trainer.example5-keras \
+  --package-path ./trainer \
+  -- \
+  --train-file sentiment_set.pickle \
+  --job-dir ./tmp/example-5
+```
+
+But the try run the code remotely on Google Cloud:
+```
+export BUCKET_NAME=tf-learn-simple-sentiment
+export JOB_NAME="example_5_train_$(date +%Y%m%d_%H%M%S)"
+export JOB_DIR=gs://$BUCKET_NAME/$JOB_NAME
+export REGION=europe-west1
+
+gcloud ml-engine jobs submit training $JOB_NAME \
+  --job-dir gs://$BUCKET_NAME/$JOB_NAME \
+  --runtime-version 1.0 \
+  --module-name trainer.example5-keras \
+  --package-path ./trainer \
+  --region $REGION \
+  --config=trainer/cloudml-gpu.yaml \
+  -- \
+  --train-file gs://tf-learn-simple-sentiment/sentiment_set.pickle
+```
+will give you an error:
+```
+import keras failed... No module named Keras...
+```
+
+### Make the training job install Keras before running
+
+To get things going, it turned out that we need to to install Keras (or some other modules you need) with a `setup.py` script and put it on the same place folder where you run the gcloud command:
+```
+# setup.py
+from setuptools import setup, find_packages
+
+setup(name='example5',
+  version='0.1',
+  packages=find_packages(),
+  description='example to run keras on gcloud ml-engine',
+  author='Fuyang Liu',
+  author_email='fuyang.liu@example.com',
+  license='MIT',
+  install_requires=[
+      'keras',
+      'h5py'
+  ],
+  zip_safe=False)
+```
+
+After saving the file you should expect to have a folder structure look 
+like this:
+```
+├── setup.py
+└── trainer
+    ├── __init__.py
+    ├── cloudml-gpu.yaml
+    ├── example5-keras.py
+```
+
+With this `setup.py`, now you should be able to run the above `gcloud ml-engine jobs submit training` command successfully and see the Keras 
+model trained on Google Cloud with GPU:
+
+![gc-run-keras-1](/assets/tensorflow/2017-04-02-just-another-tensorflow-beginner-guide-4/gc-run-keras-1.png)
+
+And we could see the model is also saved successfully in the google storage of our project bucket, under the folder marked by the job name.
+(Note that in order to save the h5 type of model, we had to add `h5py` package in the `setup.py` script above)
+
+![gc-run-keras-2](/assets/tensorflow/2017-04-02-just-another-tensorflow-beginner-guide-4/gc-run-keras-2.png)
+
 ### Summary
-Contragulations, now you have made a simple Tensorflow model and trained on Google Cloud with a Tesla K80 graphic card. 
+Contragulations, now you have made a simple Keras model and trained on Google Cloud with a Tesla K80 graphic card. 
 
 From here you should be capable of using a much larger dataset and perhaps a much more complex model for some doing real fancy applications :)
