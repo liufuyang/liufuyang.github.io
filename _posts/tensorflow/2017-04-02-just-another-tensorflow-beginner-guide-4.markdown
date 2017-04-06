@@ -179,7 +179,8 @@ by doing:
 $ echo tensorboard log dir: ${JOB_DIR}
 $ tensorboard --logdir=${JOB_DIR}/logs --port 8000 --reload_interval=5
 ```
-(Alternatively running script `gcloud.tensorboard.show.sh` from example code base)
+(Alternatively running script `gcloud.tensorboard.show.sh` from example code base).
+If no graph is shown or no `${JOB_DIR}` output from the command, make sure you run the previous script with `source`, such as `source gcloud.remote.run.sh` so that environment variables can be exported properly.
 
 Open browser on localhost:8000, 
 you should be able to see the loss and accuracy info as I see them now:
