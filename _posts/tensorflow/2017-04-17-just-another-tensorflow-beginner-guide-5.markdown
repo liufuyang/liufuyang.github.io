@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Just another Tensorflow beginner guide (Part5 - Delpoy a Keras Model)"
+title:  "Just another Tensorflow beginner guide (Part5 - Deploy a Keras Model)"
 date:   2017-04-07
 comments: true
 ---
