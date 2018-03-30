@@ -17,28 +17,27 @@ need to use this wildcard feature yet, but nevertheless it would be fun just to
 try out the DNS-based domain ownership validation anyway. 
 
 Also it seems with the tool `certbot`, one could use some DNS plugins to even make 
-automatic certificate generation an easy job. [Like what this post is doing](http://www.eigenmagic.com/2018/03/14/howto-use-certbot-with-lets-encrypt-wildcard-certificates/)
+automatic certificate generation an easy job. [Like what this post is doing](http://www.eigenmagic.com/2018/03/14/howto-use-certbot-with-lets-encrypt-wildcard-certificates/).
 
 As my domain name is provided via freenom, it seems there is no available plugins there? 
-So I am going to use a manual way to get certificates. You could probably to see
-the general idea how this DNS-based domain ownership works.
+So I am going to use a manual way to get certificates. You could also probably get a general idea of how this DNS-based domain ownership works.
 
 ## How to use `certbot` to get wildcard certificates - manually
 
 So firstly, simply use docker to run `certbot` command on your server (or probably can be done anywhere?)
 like this:
 ```
-sudo docker run -it --rm --name certbot \
+$ sudo docker run -it --rm --name certbot \
      -v "/etc/letsencrypt:/etc/letsencrypt"  \
      -v "/var/lib/letsencrypt:/var/lib/letsencrypt" \
      certbot/certbot certonly --manual \
      --preferred-challenges dns -d *.lifeinweeks.ml
 ```
 Note that:
-* `--preferred-challenges dns` means use DNS-based domain ownership validation
-* `-d *.lifeinweeks.ml` means to specify domain name (the certificates signed for) as \*.lifeinweeks.ml
+* `--preferred-challenges dns` means to use DNS-based domain ownership validation
+* `-d *.lifeinweeks.ml` means to specify the domain name (the certificates signed for) as \*.lifeinweeks.ml
 * Certificates will be saved under `/etc/letsencrypt/live`, you will see a message later when the command 
-finished successfully later.
+finishes successfully later.
 
 Yep, so run this, you see output as:
 ```
@@ -73,7 +72,7 @@ Click "Save Changes" to add the record.
 ![freenom](/assets/2018-03-30-lets-encrypt-dns/freenom.png)
 * Secondly, use the following command in another terminal to check the changes have taken effect:
      ```
-     dig -t txt +short  _acme-challenge.lifeinweeks.ml
+     $ dig -t txt +short _acme-challenge.lifeinweeks.ml
      ```
      which gives out
      ```
@@ -106,6 +105,6 @@ IMPORTANT NOTES:
 
 Congratulations, now you can happily serve those certificates on your server to have https enabled on your domain name :D
 
-Reference: [1](https://mp.weixin.qq.com/s?__biz=MzIwMzg1ODcwMw==&mid=2247487566&idx=1&sn=3eea2bc71b123967fca82934ee1353e7&chksm=96c9a62ea1be2f3803a053df9ec46970a2fe24c64c08c1695b909ed6f836168a840dac777282#rd)
-[2](https://securityboulevard.com/2018/03/free-https-wildcard-certificates-are-now-available/)
-[3](http://www.eigenmagic.com/2018/03/14/howto-use-certbot-with-lets-encrypt-wildcard-certificates/)
+Reference: [[1]](https://mp.weixin.qq.com/s?__biz=MzIwMzg1ODcwMw==&mid=2247487566&idx=1&sn=3eea2bc71b123967fca82934ee1353e7&chksm=96c9a62ea1be2f3803a053df9ec46970a2fe24c64c08c1695b909ed6f836168a840dac777282#rd)
+[[2]](https://securityboulevard.com/2018/03/free-https-wildcard-certificates-are-now-available/)
+[[3]](http://www.eigenmagic.com/2018/03/14/howto-use-certbot-with-lets-encrypt-wildcard-certificates/)
