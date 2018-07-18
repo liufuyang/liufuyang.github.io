@@ -63,8 +63,8 @@ also it can wires up with the TiDB cluster you just created by the command above
 More info you can see [here](https://hub.docker.com/r/liufuyang/tispark-notebook/) and [here](https://github.com/liufuyang/tidb-learning)
 
 So while your TiDB cluster is running in docker, start notebook like this:
-```
-git clone git@github.com/liufuyang/tidb-learning.git
+```sh
+git clone https://github.com/liufuyang/tidb-learning
 
 cd tidb-learning
 
