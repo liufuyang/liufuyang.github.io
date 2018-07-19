@@ -44,8 +44,10 @@ To check if your deployment is successful:
 
 To connect onto the database with your favourite MySQL client:
 ```
-mysql -h 127.0.0.1 -P 4000  -u root
+mysql -h 127.0.0.1 -P 4000  -u root --default-character-set=utf8
 ```
+If seeing errors like `ERROR 2013 (HY000): Lost connection to MySQL server at 'reading initial communication packet', system error: 0`
+then try change the host to `0.0.0.0`. It might be some [glitch](https://github.com/pingcap/docs-cn/issues/606)
 
 To inject some test data into the db (using the data file already packed inside Ti-Spark's image)
 ```
