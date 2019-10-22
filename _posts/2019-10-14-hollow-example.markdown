@@ -412,7 +412,7 @@ Hollow provide a `uniqueIndex` method that allows you to do this.
 We can try it out as follow:
 
 ```kotlin
-# consumer code - Application.kt
+// consumer code - Application.kt
     ...
     /** Hollow setup **/
     ...
@@ -438,7 +438,7 @@ After we create index as above, we can use it via a newly added
 get endpoint as follow:
 
 ```kotlin
-# consumer code
+// consumer code
     get("/info/{id}") {
         val id = call.parameters["id"]?.toInt() ?: throw IllegalStateException("Must provide id")
         val infoEntity = uniqueIndex.findMatch(id)
@@ -476,7 +476,7 @@ Suppose we would like to use the `name` field to select all the
 Add it like this:
 
 ```kotlin
-# consumer code - Application.kt
+// consumer code - Application.kt
     ...
     /** Hollow setup **/
     ...
@@ -547,13 +547,13 @@ source code API for the consumer side.
 
 Then update the consumer code as follow:
 ```kotlin
-# consumer side - InfoEntityAdapter.kt
+// consumer side - InfoEntityAdapter.kt
 obj.addProperty("status", src.status._name)
 ```
 
 Then add the HashIndex on this Enum Status:
 ```kotlin
-# consumer side - Application.kt
+ - Application.kt
     ...
     // Setting up an Hash Index on Enum
     val statusIndex: HashIndex<InfoEntity, String> = builder.usingPath("status._name", String::class.java)
@@ -564,7 +564,7 @@ Then add the HashIndex on this Enum Status:
 Lastly add another endpoint to test it:
 
 ```kotlin
-# consumer side - Application.kt
+// consumer side - Application.kt
     get("/info/status/{status}") {
         val status = call.parameters["status"] ?: throw IllegalStateException("Must provide status")
         val infoEntities = statusIndex.findMatches(status).collect(Collectors.toList())
