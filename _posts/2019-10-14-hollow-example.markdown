@@ -60,10 +60,10 @@ and Java code can be transformed to each other without difficulty, you can still
 guide if your services are in Java only.
 
 We will firstly create a simple Ktor web service as a producer. In it's memory we keep a 
-list of data called `entityList: List<InfoEntity>`. To make code simple we will just use a 
-not thread safe version of the list and add some simple endpoint to show and update this list.
+map of data called `db: Map<Int, InfoEntity>`. To make code simple we will just use a 
+not thread safe version of the map and add some simple endpoint to show and update this map, as if it is some kind of database.
 
-Then later on we show how to use Hollow to propagate this list's data onto another running
+Then later on we show how to use Hollow to propagate this `db` data onto another running
 service - a consumer. 
 
 For the simplicity, we will just use a local file location `target/publish` in the producer project
@@ -107,9 +107,9 @@ data entity class, also using the field `id` as it's primary key.
 Hollow will not allow duplicate primary keys when store entity class
 data in memory.
 
-Then we add the code to create a memory "db" to hold a list of 
-those `InfoEntity`s. This is not thread safe but we keep it simple for 
-illustration of Hollow usage.
+Then we add the code to create a memory `db` to hold a list of 
+those `InfoEntity`s (each one has an unique `id`). 
+This is not thread safe but we keep it simple for illustration of Hollow usage.
 
 ```kotlin
 package com.example
@@ -133,28 +133,25 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
-    val entityList = listOf(
-        InfoEntity(1, "News 1", "NEW", 0),
-        InfoEntity(2, "News 2", "NEW", 1),
-        InfoEntity(3, "News 3", "NEW", 2)
-    ).toMutableList()
+    val db = mapOf(
+        1 to InfoEntity(1, "News 1", Status.NEW, 0),
+        2 to InfoEntity(2, "News 2", Status.NEW, 1),
+        3 to InfoEntity(3, "News 3", Status.NEW, 2)
+    ).toMutableMap()
 
     routing {
-
         get("/info") {
-            call.respond(entityList)
+            call.respond(db.values)
         }
 
         post("/info") {
             val newInfo = call.receive<InfoEntity>()
             println(newInfo)
-            val sameId = entityList.filter { it.id == newInfo.id }
-            if (sameId.isEmpty()) {
-                entityList.add(newInfo)
-            } else {
-                val ind = entityList.indexOfFirst { it.id == newInfo.id }
-                entityList.removeAt(ind)
-                entityList.add(newInfo)
+
+            db[newInfo.id] = newInfo
+
+            producer.runIncrementalCycle { state ->
+                state.addOrModify(newInfo)
             }
             call.respond(HttpStatusCode.Created)
         }
@@ -162,10 +159,10 @@ fun Application.module(testing: Boolean = false) {
 }
 ```
 
-Here in `post("/info")` we make sure the `entityList`'s elements have unique `id`s as if it is some database system. So no two entities in it will have 
-the same `id`.
+Here in `post("/info")` we store new data entry into the `db`, 
+whose elements have unique `id`s as if it is some database system.
 
-Now you can verify the producer endpoint to check all the values in `entityList`
+Now you can verify the producer endpoint to check all the values in `db`:
 
 ```
 curl localhost:8080/info
@@ -181,7 +178,7 @@ curl localhost:8080/info
 ]
 ```
 
-Or you can use the endpoint like this to add/update a certain value in `entityList`
+Or you can use the endpoint like this to add/update a certain value in `db`:
 
 ```
 curl -i  -X POST localhost:8080/info -H "Content-Type: application/json" -d '{"id":4, "name":"A new item", "status":"NEW", "timeUpdated":3}'
@@ -214,17 +211,14 @@ We'll need a data producer to create a data state which will be transmitted to c
 // producer code
 ...
 fun Application.module(testing: Boolean = false) {
-    install(ContentNegotiation) {
-        gson {
-        }
-    }
+    ... // same code above, neglected
 
-    val entityList = listOf(
-        InfoEntity(1, "News 1", "NEW", 0),
-        InfoEntity(2, "News 2", "NEW", 1),
-        InfoEntity(3, "News 3", "NEW", 2)
-    ).toMutableList()
-
+    val db = mapOf(
+        1 to InfoEntity(1, "News 1", Status.NEW, 0),
+        2 to InfoEntity(2, "News 2", Status.NEW, 1),
+        3 to InfoEntity(3, "News 3", Status.NEW, 2)
+    ).toMutableMap()
+    
     /** Hollow setup **/
     val localPublishDir = File("target/publish")
 
@@ -237,33 +231,13 @@ fun Application.module(testing: Boolean = false) {
         .buildIncremental()
 
     producer.runIncrementalCycle { state ->
-        for (e in entityList)
+        for (e in db.values)
             state.addIfAbsent(e)
     }
+    /** End of Hollow setup **/
 
     routing {
-        get("/info") {
-            call.respond(entityList)
-        }
-
-        post("/info") {
-            val newInfo = call.receive<InfoEntity>()
-            println(newInfo)
-
-            val sameId = entityList.filter { it.id == newInfo.id }
-            if (sameId.isEmpty()) {
-                entityList.add(newInfo)
-            } else {
-                val ind = entityList.indexOfFirst { it.id == newInfo.id }
-                entityList.removeAt(ind)
-                entityList.add(newInfo)
-            }
-
-            producer.runIncrementalCycle { state ->
-                state.addOrModify(newInfo)
-            }
-            call.respond(HttpStatusCode.Created)
-        }
+        ... // same code above, neglected
     }
 }
 ```
@@ -386,13 +360,13 @@ class InfoEntityAdapter : JsonSerializer<InfoEntity> {
 
 Now you can play with the producer and consumer simply via the `/info` endpoint:
 ```
-# Firstly verify the initial list get populated to consumer side:
+# Firstly verify the initial data get populated to consumer side:
 curl localhost:8081/info | jq .
 
 # Then add one element from the producer side:
 curl -i localhost:8080/info  -H "Content-Type: application/json" -X POST -d '{"id": 4, "name": "News 4", "status": "NEW"}'
 
-# Then verify again the list get updated on the consumer side:
+# Then verify again the data get updated on the consumer side:
 curl localhost:8081/info | jq .
 ```
 The output is neglected above.
@@ -624,7 +598,7 @@ We can remedy this situation by restoring our newly created producer with the la
     producer.restore(latestAnnouncedVersion, blobRetriever)
 
     producer.runIncrementalCycle { state ->
-        for (e in entityList)
+        for (e in db.values)
             state.addIfAbsent(e)
     }
 
