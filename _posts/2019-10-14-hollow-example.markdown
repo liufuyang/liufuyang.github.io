@@ -207,6 +207,9 @@ curl localhost:8080/info
 
 # Step 2 - Make service as a Hollow Producer
 
+We'll need a data producer to create a data state which will be transmitted to consumers.
+
+
 ```kotlin
 // producer code
 ...
@@ -304,7 +307,7 @@ files around.
 After running the main function above, you should see those Java files 
 are generated in consumer project:
 
-![Generated code](/assets/2019-10-14-hollow-example/generated_code.png)
+<img src="/assets/2019-10-14-hollow-example/generated_code.png" width="200" height="300" />
 
 Another super good thing of Kotlin I have to mention is that you can use 
 Kotlin together with Java code in the same project. So even Hollow generated 
@@ -584,6 +587,63 @@ curl -i localhost:8080/info  -H "Content-Type: application/json" -X POST -d '{"i
 
 curl localhost:8081/info/status/OLD | jq .
 ```
+
+# Restoring Producer at Startup
+
+So far our producer-consumer Hollow system seems working find. But there is 
+actually still a big problem remains. If you have monitored the publish file
+location, `target/publish` in our example's case, you will notice that
+each time you start the producer, a new Snapshot is created.
+
+This could be a problem in the way that
+* Firstly it making the old snapshot not used anymore, and creating a new snapshot on each producer restart
+* Secondly when a new state with only a snapshot will be produced and announced, and clients will load that data state with an operation called a [double snapshot](https://github.com/Netflix/hollow/blob/master/docs/advanced-topics.md#double-snapshot), which has potentially undesirable performance characteristics.
+
+More discussion of this can be seen [here](https://github.com/Netflix/hollow/blob/master/docs/getting-started.md#restoring-at-startup).
+
+We can remedy this situation by restoring our newly created producer with the last announced data state. For example, change the producer code to this:
+
+```kotlin
+// producer code - Application.kt
+    ...
+    /** Hollow setup **/
+    val localPublishDir = File("target/publish")
+
+    val publisher = HollowFilesystemPublisher(localPublishDir.toPath())
+    val announcer = HollowFilesystemAnnouncer(localPublishDir.toPath())
+    val blobRetriever = HollowFilesystemBlobRetriever(localPublishDir.toPath())
+    val announcementWatcher = HollowFilesystemAnnouncementWatcher(localPublishDir.toPath())
+
+    val producer = HollowProducer
+        .withPublisher(publisher)
+        .withAnnouncer(announcer)
+        .buildIncremental()
+
+    producer.initializeDataModel(InfoEntity::class.java)
+    val latestAnnouncedVersion = announcementWatcher.getLatestVersion()
+    producer.restore(latestAnnouncedVersion, blobRetriever)
+
+    producer.runIncrementalCycle { state ->
+        for (e in entityList)
+            state.addIfAbsent(e)
+    }
+
+    /** End of Hollow setup **/
+    ...
+```
+Now we add a `blobRetriever` and a `announcementWatcher` which was used previously
+only for consumer. By calling `producer.restore(latestAnnouncedVersion, blobRetriever)`
+now we can reuse the previously announced Snapshots while service starts.
+
+Here we assume the data is going to be loaded into the producer service is not changed 
+while service is down. That's why we can use `state.addIfAbsent(e)` in the 
+`producer.runIncrementalCycle {...}` block.
+
+If in other cases we can't guarantee that, or meaning that when producer is restarting,
+the data to be loaded into it, is already different from the Hollow snapshots 
+previously published, you might want to switch that function call to 
+`state.addOrModify(e)` so that the updated element info can be registered into 
+Hollow state and get published or announced as well later on.
 
 # Summary
 
