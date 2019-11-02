@@ -19,9 +19,9 @@ to start your Java Application in any special way. Simply
 ssh onto your production instances you can easily do some 
 profiling with those tools. 
 
-However here is some major comparisons in my opinion:
+However here is some major differences in my opinion:
 * JFR seems only working for Java 11 applications
-* Java-Async-Profiler works for both Java 8 and 11, but it seems provides less info then JFR.
+* Java-Async-Profiler works for both Java 8 and 11, but it seems provides less info than JFR.
 
 ## JFR
 Firstly you need a tool called JMC to view JFR results, and I
@@ -35,7 +35,8 @@ start on my mac so I had to download some older build.
 Like one from 2019-Sep worked for me.
 
 Then basic step to do profiling or recording is to
-- Ssh to an instance
+
+- ssh to an instance
 - If your app runs in docker,then enter the container: `docker exec -it 51724efa7242 /bin/bash` and cd into
 a directory the host have access to
 - If your app runs in kubernetes containers: 
@@ -53,9 +54,9 @@ a directory the host have access to
  ![JFR_1](/assets/2019-11-02-java-profiler/jfr_1.png)
  ![JFR_2](/assets/2019-11-02-java-profiler/jfr_2.png)
 
- Noticing there is a flam graph you can view as well
+ Noticing there is a flame graph you can view as well
  by open it with "Window" -> "Show View" -> "Other..." 
- -> "Flam graph".
+ -> "Flame graph".
 
  One issue I am not sure why is that it seems the 
  memory object profiler is not working for me and 
@@ -97,7 +98,7 @@ Java-Async-Profiler is also very easy to use as well.
 
 - To save result to a flame graph file
   
-  `./profiler.sh -d 30 -e itimer -f flamgraph.svg 10`
+  `./profiler.sh -d 30 -e itimer -f flamegraph.svg 10`
 
 - Then scp the file to local then you can view it in browser
   
