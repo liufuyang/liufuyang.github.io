@@ -21,7 +21,7 @@ profiling with those tools.
 
 However here is some major differences in my opinion:
 * JFR seems only working for Java 11 applications
-* Java-Async-Profiler works for both Java 8 and 11, but it seems provides less info than JFR.
+* Java-Async-Profiler works for both Java 8 and 11, but it seems providing less info than JFR.
 
 ## JFR
 Firstly you need a tool called JMC to view JFR results, and I
