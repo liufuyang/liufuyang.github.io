@@ -12,7 +12,7 @@ title: Fuyang Liu's Blog
 description: Just another random site for random thoughts
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "liufuyang.github.io" # the base hostname & protocol for your site
-#twitter_username: liufu_ty
+twitter_username: liufu_ty
 github_username:  liufuyang
 
 # Build settings
