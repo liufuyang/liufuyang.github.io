@@ -3,7 +3,16 @@
 ---
 @charset "utf-8";
 
+// make code looks good with linenos
+.rouge-table {
+  margin: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
 
+  pre, code {
+    border: none;
+  }
+}
 
 // Our variables
 $base-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
