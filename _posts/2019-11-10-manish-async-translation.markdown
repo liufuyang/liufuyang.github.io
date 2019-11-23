@@ -23,9 +23,11 @@ Translation of Manish's orignal blog has been approved by the original author.
 翻译已经获得原作者Manish Goregaokar的许可. 下面开始正文.
 
 ---
+<br>
 
+# **Tokio 和 Async IO 到底都是些啥玩意?**
 # What Are Tokio and Async IO All About?
-# Tokio 和 Async IO 到底都是些啥玩意?
+
 作者: [Manish Goregaokar](https://manishearth.github.io/blog/2018/01/10/whats-tokio-and-async-io-all-about/).
 写于2018-01-10.
 
@@ -41,7 +43,7 @@ Translation of Manish's orignal blog has been approved by the original author.
 Async IO 到底都是在搞啥? 协程又是什么东西? 
 轻线程(lightweight thread)呢? 这些概念直接有关系吗?
 
-# 我们在想解决怎样的问题?
+# **我们在想解决怎样的问题?**
 
 Rust 的一个卖点就是“并发不可怕”. 但是那种,
 需要管理大量输入输出所限的任务的并发 - 那种能在Go, 
@@ -65,7 +67,10 @@ Rust 里并不存在.
 我们需要比较“轻”的线程.
 
 ---
-# 轻量级线程 - Lightweight 线程
+
+<br>
+
+# **轻量级线程 - Lightweight 线程**
 
 我认为一种容易理解轻量级线程的方法, 是暂时先不要管 Rust, 而看看 Go 是怎么做的. 因为 Go 在这一点公认做的很好.
 
@@ -99,19 +104,24 @@ Go 之前采用的解决方法是用分段的栈(segmanted stacks). 对多数语
 
 但是这种对于栈要连续的需求并不是严格必须的. 在 Go 里, 栈是由很多小的区块组成的. 当开始调用一个函数的时候, Go 会看一个栈上是否还有足够的空间来跑这个函数, 如果不够, 分配一块新的小空间作为栈, 然后让函数跑在上面. 所以如果你有上千个线程, 每个在做一些小量的工作, 它们总共占用着很多很小的小栈, 这就没什么问题.
 
-现如今, Go 实际上采用了不同的一种方式. 它会[复制栈](https://blog.cloudflare.com/how-stacks-are-handled-in-go/). 我上面提到, 由于需要栈数据保持在原位, 栈不能被"从新分配/reallocated". 但其实这也不一定完全正确 - 因为 Go 还有垃圾回收, 它也知道每一个指针在哪里, 从而可以把指针从定向到新的栈位置, 如果需要的话.
+现如今, Go 实际上采用了不同的一种方式. 它会[复制栈](https://blog.cloudflare.com/how-stacks-are-handled-in-go/). 我上面提到, 由于需要栈数据保持在原位, 栈不能被"从新分配/reallocated". 但其实这也不一定完全正确 - 因为 Go 还有垃圾回收, 它也知道每一个指针在哪里, 从而可以把指针重新定向到新的栈位置, 如果需要的话.
 
 总之, 不管用分段的栈, 或者复制栈的方法, Go 的丰富的运行时可以让其很好的管理这些事务. Goroutines 非常廉价, 轻量, 你可以创建成千上万的 goroutine, 系统也不会有什么问题.
 
 Rust 早先的时候支持轻量/"绿色"线程(我记得好像是用分段栈的方法). 但是, Rust 非常关心"不用的东西就不要花钱在上面", 所以如果支持轻量线程的话, 所有不需要轻量级线程的代码也得背上这个包袱. 因此 Rust 在1.0版本之前, 去掉了对轻量级线程的支持.
 
 ---
+<br>
 
-# 异步 I/O - Async I/O
+# **异步 I/O - Async I/O**
+
+
+
 
  🗼
 
 ---
+<br>
 
 索引
 1. 值得提醒一下并不是说创建大量线程是完全不可行的方案. 比如 Apache 就采用大量系统线程. 系统线程也经常可以在这种问题上被采用.
