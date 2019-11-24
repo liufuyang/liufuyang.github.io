@@ -132,9 +132,17 @@ Rust 早先的时候支持轻量/"绿色"线程(我记得好像是用分段栈�
 
 **Futures** 是另一块解决这个问题的基石. 一个 `Future` 好比一个将来总会有值返回的承诺 / promise (事实上, 在Javascript里, 这个概念就直接被叫做了 `Promise`也就是承诺).
 
+比如你请求在网络端口监听, 得到一个 `Future` (事实上, 是一个 `Stream`, 跟 future 差不多但是返回一连串的值). 这个 `Future` 一开始并没有受到任何响应, 但响应来到时它就会知道. 你可以 `wait()` 来等待在 `Future` 上, 这样可以以阻塞但方式等待直到结果返回, 你也可以 `poll()` 它, 问问它有没有结果已经返回了(有的话结果会给到你手里).
+
+Futures 还可以被链接在一起, 因此你可以写些比如这样的东西 `future.then(|result| process(result))`. 那个给 `then` 的闭包自己也可以产生一个 future, 所以你可以继续往后面链接诸如 I/O 之类的操作. 在这些链接起来的 futures 上, 你得用 `poll()` 来取得进展; 每次你调用 poll() 的时候, 如果前一个 future 已经准备好了, 它会跳到下一个 future 上.
+
+这算是在 non-blocking I/O 上的一个很不错的抽象框架.
+
+链接 futures 就合链接 iterators 差不多. 每个 `and_then` (或者其他什么算子) 调用会返回一个包裹内部 future 的结构, 上面也可能含有一个其他的闭包(closure). 闭包 / closures 自己会带有它们的引用和数据, 所以这一整串看上去其实像一个小小的栈.
 
 
- 🗼
+ # 🗼**Tokio**🗼
+Tokio
 
 ---
 <br>
