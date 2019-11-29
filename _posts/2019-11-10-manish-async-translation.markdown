@@ -142,7 +142,126 @@ Futures 还可以被链接在一起, 因此你可以写些比如这样的东西 
 
 
  # 🗼**Tokio**🗼
-Tokio
+Tokio 本质上来说就是包在 mio 之上的一个抽象层, 提供了 futures 在其之上. Tokio 内部实现了一个核心事件循环 (core event loop). 你给它提供代码闭包(closure), 它会返回 future 给你. Tokio 所做的事情其实就是运行你给它的所有闭包, 并采用 mio 来高效地知晓哪个 future 已经准备完毕[注释3], 然后继续运行这些 futures (调用 `poll()` 来继续).
+
+这种模式其实已经和 Go 在概念层面非常相似. 你得自己手动建立 Tokio 事件循环(也就是所谓的“调度器”). 然而建好之后, 你就可以给它多个做 I/O 的任务了, 事件循环会管理任务间的切换, 当一个任务 I/O 等待的时候去跑另一个任务. 重要的一点是 Tokio 是单线程的, 而 Go 的调度器可以利用多个系统线程来执行调度. 然而, 你可以把 CPU 要求高的任务发送到其他操作系统线程之上运行, 用管道来实现这种设计并不是很难.
+
+当在概念层面和 Go 相似的时候, 代码层面还不是特别美观. 比如想这段 Go 代码:
+```go
+// error handling ignored for simplicity
+
+func foo(...) ReturnType {
+    data := doIo()
+    result := compute(data)
+    moreData = doMoreIo(result)
+    moreResult := moreCompute(data)
+    // ...
+    return someFinalResult
+}
+```
+
+在 Rust 就可能要写成这个样子:
+```rust
+// error handling ignored for simplicity
+
+fn foo(...) -> Future<ReturnType, ErrorType> {
+    do_io()
+    .and_then(|data| do_more_io(compute(data)))
+    .and_then(|more_data| do_even_more_io(more_compute(more_data)))
+    // ......
+}
+```
+
+看着不是很美观. [如果再加入分支和循环, 代码会更难看](https://docs.rs/futures/0.1.25/futures/future/fn.loop_fn.html#examples). 出现这种问题的关键是, 在 Go 里我们在代码就直接拥有一个个的中断点, 而在 Rust 里我们得编码这种链接在一起的算子来实现一种状态机. 好吧...
+
+---
+<br>
+
+# **生成器和 async/await** - Generators and async/await
+
+这就是为什么我们需要生成器(generator, 或者叫 coroutines).
+
+[Generators](https://doc.rust-lang.org/nightly/unstable-book/language-features/generators.html) 是 Rust 的一个实验功能. 比如这就是一个例子:
+
+```rust
+let mut generator = || {
+    let i = 0;
+    loop {
+        yield i;
+        i += 1;
+    }
+};
+assert_eq!(generator.resume(), GeneratorState::Yielded(0));
+assert_eq!(generator.resume(), GeneratorState::Yielded(1));
+assert_eq!(generator.resume(), GeneratorState::Yielded(2));
+```
+
+Functions 是那种运行一次有一个返回的东西. 而 generator 可以产生多个返回. 它们会暂停运行来 “yield” (返回)一些值, 而后它们可以继续运行到下一次 yield. 虽然我的例子里没有显示, 但它们也可以像普通 function 一样最终停止运行.
+
+在 Rust 当中闭包(closures)算是[装有捕获数据的语法糖, 外加一个某个`Fn` traits 的实现, 以便能够被调用](http://huonw.github.io/blog/2015/05/finding-closure-in-rust/).
+
+Generators 和这差不多, 除了它们也实现了 `Generator` trait [注释4]. 通常generator会保存一个 enum 来表示不同的状态.
+
+[Unstable book](https://doc.rust-lang.org/nightly/unstable-book/language-features/generators.html#generators-as-state-machines) 这本在线书里有些例子, 来展示 generator 状态 enum 是啥样的.
+
+利用 generator, 我们的代码就变得更像我们需要的了! 现在可以这样写了:
+```rust
+fn foo(...) -> Future<ReturnType, ErrorType> {
+    let generator = || {
+        let mut future = do_io();
+        let data;
+        loop {
+            // poll the future, yielding each time it fails,
+            // but if it succeeds then move on
+            match future.poll() {
+                Ok(Async::Ready(d)) => { data = d; break },
+                Ok(Async::NotReady(d)) => (),
+                Err(..) => ...
+            };
+            yield future.polling_info();
+        }
+        let result = compute(data);
+        // do the same thing for `doMoreIo()`, etc
+    }
+
+    futurify(generator)
+}
+```
+
+这里 `futurify` 是一个函数, 拿一个 generator 作为输入, 返回一个 future, 这个 future 会在每次 `poll()` 调用的时候去调用 generator 的 `resume()`, 而且会一直返回 `NotReady` 直到 generator 结束执行.
+
+可是, 这样的代码不是显得更恶心了吗? 把之前相对干净的 callback-chaining code 搞成这样是要做甚?
+
+但现在你看, 这段代码现在看上去就是“线性”但了. 我们已经把那种回调代码转成了线性但流程, 就像 Go 的代码一样. 然而目前还有着这个奇怪的 loop-yield 啰嗦代码, 和一个 `futurify` 函数.
+
+这就是为什么我们需要引入 [futures-await](https://github.com/alexcrichton/futures-await) 语法了. `futures-await` 是一个过程宏库, 帮你实现打包上述啰嗦代码的最后一点工作. 采用其之后, 代码就可以写成这样了:
+
+```rust
+#[async]
+fn foo(...) -> Result<ReturnType, ErrorType> {
+    let data = await!(do_io());
+    let result = compute(data);
+    let more_data = await!(do_more_io());
+    // ....
+}
+```
+
+很干净了吧? 几乎和 Go 一样干净了, 只是我们还得显式调用 `await!(...)`. 这类 await 调用基本上提供了那种 Go 代码隐含有的中断点.
+
+哦, 当然了, 因为下面是用 generator 实现的, 你可以加循环, 加分支, 随你怎样写, 就像一般代码一样, 现在看着就干净了.
+
+---
+<br>
+
+# 综上所述 - Tying it together
+
+所以, 在 Rust 当中, futures 可以被连在一起来提供一个轻量的栈样的系统. 再加上 async/await, 你可以简洁的编写这种 future 链. `await` 提供了显式的在每个 I/O 操作上的中断点. Tokio 提供了事件循环 - “调度器”抽象, 来管理你提交的 async functions, 而它自己去调用 mio 给抽象出来的底层原始 I/O 阻塞操作.
+
+这些组建都可以被单独使用 - 你可以使用 Tokio 和 futures 而不用  async/await. 你也可以用 async/await 而不用 Tokio - 比如, 我觉得这可能对 Servo 的网络栈有帮助. 它并不需要做很多并行的 I/O (不会到上千线程那种级别), 所以它尽可以用多个操作系统线程. 然而, 我们还想有个线程池和数据管道, async/await 就可以派上用场.
+
+同事采用上述所有的组建, 将使得我们写出几乎和 Go 一样干净的代码. 而且 generators 和 async/await 和 borrow checker 结合的很好 (因为 generators 其实就是一些 enum 状态机), Rust 的安全机制还可以持续发挥作用, 我们因此而有了 “fearless concurrency”, 再也无需畏惧编写有大量 I/O 操作的多线程程序了!
+
+*感谢 Arshia Mufti, Steve Klabnik, Zaki Manian, 和 Kyle Huey 的审阅工作*
 
 ---
 <br>
@@ -150,3 +269,26 @@ Tokio
 索引
 1. 值得提醒一下并不是说创建大量线程是完全不可行的方案. 比如 Apache 就采用大量系统线程. 系统线程也经常可以在这种问题上被采用.
 2. 轻量级线程也经常被叫做 M:N 线程 (也被称为"绿色线程/green thread").
+3. 总体来说, future 运算子并不知晓 tokio 或者 I/O, 所以, 想要问一个运算子“hey, 你在等待哪种 I/O 操作?” 并不是一件容易的事情. 实际上, 用 Tokio 的时候你是在用一种特殊的 I/O primitives, 这种 primitives 不仅提供 futures, 而且也会注册自己到本地线程状态的调度器上. 这样的话, 当一个 future 在等待 I/O 的时候, Tokio 可以检查最近期的 I/O 操作是哪个, 并把这个操作和这个 future 关联, 所以当这个 I/O 操作的 `epoll` 调用告诉 Tokio 本操作完成的时候, Tokio 就可以把这个 future 再次唤醒了. (2018 12月再次编辑: 这种方式已经改变了, futures 现在有一个内建的 `Waker` 概念, 可以用来向栈上传递东西)
+4. `Generator` trait 有个 `resume()` 函数, 你可以多次调用, 每次调用会 yield 数据或者告诉你 generator 已经运行结束了.
+
+作者: [Manish Goregaokar](https://manishearth.github.io/blog/2018/01/10/whats-tokio-and-async-io-all-about/).
+写于2018-01-10.
+
+---
+<br>
+
+### 我的后记
+
+如今已是 2019 年 11 月. Rust 的 Async/Await 语法已经稳定, Tokio 也刚刚发布了 0.2 版本, 一切似乎都在按计划蓬勃发展. 上文最后提到的那个例子, 现在已经可以写成这样了(而且也无需使用 futures-await) :
+
+```rust
+async fn foo(...) -> Result<ReturnType, ErrorType> {
+    let data = do_io().await;
+    let result = compute(data);
+    let more_data = do_more_io().await;
+    // ....
+}
+```
+
+怎么样, 是不是看着越来越 cool 了 :)
