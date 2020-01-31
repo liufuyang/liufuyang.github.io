@@ -45,7 +45,7 @@ a directory the host have access to
 - Start a recording: `jcmd 1 JFR.start`
   Noticing the output `Started recording 1. No limit specified, using maxsize=250MB as default.`
 - Wait a minute or so
-- Dump the recording to file: `jcmd 1 JFR.dump name=1 filepath=/tmp/foobar.jfr`
+- Dump the recording to file: `jcmd 1 JFR.dump name=1 filename=/tmp/foobar.jfr`
 - Stop the recording (if you are done): `jcmd 1 JFR.stop name=1`
 - Exit ssh shell and use scp the file `foobar.jfr` to your laptop
 - Then you can load the file into the JMC application
