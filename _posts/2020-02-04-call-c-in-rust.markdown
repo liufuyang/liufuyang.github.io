@@ -116,7 +116,7 @@ However, the above code only works when that `doubler.o` already exist. For a sm
 We can try achieve this via the [cc-rs](https://github.com/alexcrichton/cc-rs) Rust crate:
 
 ```toml
-// add in cargo.toml
+# add in cargo.toml
 [build-dependencies]
 cc = "1.0"
 ```
