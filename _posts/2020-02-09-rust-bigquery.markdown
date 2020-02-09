@@ -143,7 +143,7 @@ Simply running it:
 ```
 node generate.js
 ```
-which will create the `base62.js` - a **golden single file** include the JS helper code and the wasm byte code in it!
+which will create the [`base62.js`](https://github.com/liufuyang/rb62-wasm/blob/master/base62.js) - a **golden single file** include the JS helper code and the wasm byte code in it!
 
 If you take a glance of it, you would spot all the helper code that is more or less the same with the manually written code in the outdated Stackoverflow question I linked above.
 
