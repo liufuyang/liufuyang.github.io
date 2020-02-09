@@ -21,12 +21,12 @@ I will show you how to achieve this later in the post. But let me explain why fo
 
 While I was trying to get it all work, a nice guy [Pauan](https://github.com/pauan) (who seem to be some core developer on Rust-WASM stuff) gave me some great help. 
 
-He also mentioned that what I was trying to do might not gain speed improvement. Simply citing his words:
-```
-As for performance, I wouldn't expect Rust to be any faster than JS in this case because it has to do a full copy of the string, do the operations in Rust, and then do a second full copy of the string whereas JS can just use the string directly, without any copying Rust is a lot faster than JS for most things, but not for strings.
+Pauan also mentioned that what I was trying to do might not gain speed improvement. Simply citing Pauan's words:
 
-Because even though Rust strings are faster than JS strings, it has to do a full copy when converting from a JS string to a Rust string, or a Rust string to a JS string. So that negates the performance benefits
-```
+>As for performance, I wouldn't expect Rust to be any faster than JS in this case because it has to do a full copy of the string, do the operations in Rust, and then do a second full copy of the string whereas JS can just use the string directly, without any copying Rust is a lot faster than JS for most things, but not for strings.
+>
+>Because even though Rust strings are faster than JS strings, it has to do a full copy when converting from a JS string to a Rust string, or a Rust string to a JS string. So that negates the performance benefits
+
 
 If you gets a bit confused reading this and would like to know more about JS String to Rust WASM, I think you can [take a glance of this post](https://stackoverflow.com/questions/49014610/passing-a-javascript-string-to-a-rust-function-compiled-to-webassembly) 
 
