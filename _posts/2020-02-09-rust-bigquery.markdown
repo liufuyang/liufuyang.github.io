@@ -122,6 +122,8 @@ Those are the wasm files that has the code of our Rust function.
 
 Then, in order to use these conveniently in a Javascript environment, [Pauan](https://github.com/pauan) has helped making me a JS script to basically combine those to files to a single JS file to be used.
 
+---
+
 ## Prepare a glue JS script and run it
 
 The script he made is this one `generate.js`
@@ -171,9 +173,11 @@ node test.js
 6GGODyP2LIdbxIfYxy5UbN
 ```
 
-It works! (Or you can even play it out in your browser from here https://liufuyang.github.io/rb62-wasm/)
+It works! (Or you can even play it out in your browser from here [https://liufuyang.github.io/rb62-wasm/](https://liufuyang.github.io/rb62-wasm/))
 
-### Use this on BigQuery
+---
+
+## Use this on BigQuery
 
 Now we can use this on BigQuery, firstly, upload this code 
 onto some GCS place, in my case I put it at `"gs://fuyang-draper-1/base62.js"`
@@ -194,7 +198,7 @@ OPTIONS (
 );
 
 
-SELECT hex_to_b62(hex) hex
+SELECT hex_to_b62(hex) b62
 FROM (
   select 'dbc3d5ebe344484da3e2448712a02213' as hex
   union all
