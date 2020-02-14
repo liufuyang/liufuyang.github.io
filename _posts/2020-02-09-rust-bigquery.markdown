@@ -180,7 +180,7 @@ It works! (Or you can even play it out in your browser from here [https://liufuy
 ## Use this on BigQuery
 
 Now we can use this on BigQuery, firstly, upload this code 
-onto some GCS place, in my case I put it at `"gs://fuyang-draper-1/base62.js"`
+onto some GCS place, in my case I put it at `"gs://liufuyang/public/rb62-wasm/base62.js"`
 
 Then you can run query like:
 ```sql
@@ -193,7 +193,7 @@ return wasm.then(() => {
 OPTIONS (
   library=[
     "gs://fh-bigquery/js/inexorabletash.encoding.js",
-    "gs://fuyang-draper-1/base62.js"
+    "gs://liufuyang/public/rb62-wasm/base62.js"
   ]
 );
 
@@ -223,7 +223,7 @@ CREATE TEMP FUNCTION `hex_to_b62`(hex ARRAY<STRING>) RETURNS ARRAY<STRING>
   OPTIONS (
     library=[
         "gs://fh-bigquery/js/inexorabletash.encoding.js",
-        "gs://fuyang-draper-1/base62.js"
+        "gs://liufuyang/public/rb62-wasm/base62.js"
     ]
   )
   AS '''
