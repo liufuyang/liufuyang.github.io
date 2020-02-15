@@ -217,7 +217,7 @@ As you may have already noticed or not, if each row of the select query is calli
 So in practice, you really want to group some input together and define an UDF that takes in an array of Strings and return an array of Strings. Basically it is the idea I borrowed from [Felipe Hoffa's post](https://medium.com/@hoffa/bigquery-beyond-sql-and-js-running-c-and-rust-code-at-scale-33021763ee1f).
 
 An example would be like this:
-```
+```sql
 CREATE TEMP FUNCTION `hex_to_b62`(hex ARRAY<STRING>) RETURNS ARRAY<STRING>
   LANGUAGE js
   OPTIONS (
@@ -253,5 +253,75 @@ As mentioned in the beginning, this is not really helping speed things up as fir
  For some specific queries , the wasm version is around 23-27 seconds to finish, while directly use the js library it uses 10-13 seconds, both with the grouping idea mentioned above. Without grouping it is much much slower for the wasm version.
 
 I hope this post helps anyone trying out similar or related stuff out there.
+
+---
+# UPDATE 2020-02-15 - No Grouping is really needed
+
+As Felipe mentioned to me and you can [see some discussion on this StackOverflow page](https://stackoverflow.com/questions/59430104/bigquery-javascript-udf-process-per-row-or-per-processing-node/), this means that, in the BigQuery UDF JavaScript function you defined:
+```js
+return wasm.then(() => { ...
+```
+that `wasm` is actually not loaded again and again for each row. The same process was reused multiple times, and variables such as `wasm` were kept around in between calls. Though this is not officially documented anywhere yet, according to Felipe's answer.
+
+Then this means we can just used our WASM function as if it is a JS function directly and let's run it again and do some speed comparison on some fairly large amount of data:
+
+This one is for `b62_to_hex` comparison:
+```sql
+CREATE TEMP FUNCTION `b62_to_hex`(b62 STRING) RETURNS STRING
+  LANGUAGE js
+  OPTIONS (
+        library=[
+        "gs://fh-bigquery/js/inexorabletash.encoding.js",
+        "gs://liufuyang/public/rb62-wasm/base62.js",
+        "gs://bq-udfs/latest/base62.js" -- Internal JS base62 libarary, providing Base62.toHex function
+    ]
+  )
+  AS '''
+    return wasm.then(() => wasm_bindgen.get_integer(b62));  // 26.8 sec, total 138328004 values
+    // return Base62.toHex(b62);                            // 20.2 sec, total 138328004 values
+  ''';
+
+SELECT b62_to_hex(b62_array[ORDINAL(ARRAY_LENGTH(b62_array))]) hex
+FROM(
+    SELECT  SPLIT(uri, ':') b62_array
+    FROM `spotify-entities.track.20200205`
+    # LIMIT 1000000
+  )
+```
+
+And this one for `hex_to_b62` comparison:
+```sql
+CREATE TEMP FUNCTION `hex_to_b62`(hex STRING) RETURNS STRING
+  LANGUAGE js
+  OPTIONS (
+    library=[
+        "gs://fh-bigquery/js/inexorabletash.encoding.js",
+        "gs://liufuyang/public/rb62-wasm/base62.js",
+        "gs://bq-udfs/latest/base62.js" -- Internal JS base62 libarary - providing Base62.fromHex function
+    ]
+  )
+  AS '''
+    return wasm.then(() => wasm_bindgen.get_b62(hex));  // 22.7 sec total of 138328003 element
+    // return Base62.fromHex(hex);                      // 15.4 sec total of 138328003 element
+  ''';
+
+ SELECT hex_to_b62(track.gid) AS hex 
+ FROM `spotify-entities.entities.entities20200205` 
+ WHERE track.gid IS NOT NULL
+ # LIMIT 1000000
+```
+
+## Performance result comparison on direct calling (no grouping)
+|function|JavaScript|Rust/WASM|
+--|--|--
+**b62_to_hex**| **20.2** sec| 26.8 sec
+**hex_to_b62**| **15.4** sec| 22.7 sec
+Tested each function running once on a data set having 138,328,003 rows.
+
+I would conclude that the result is not much different than the previous test with grouping. But indeed the SQL code can be much simpler now.
+
+It is still a bottle neck of the String copies from JS to WASM. Looking forward to someday on BigQuery you can run native code, perhaps via WASM or WASI, then that would be pretty cool and Rust will be very helpful in that case.
+
+---
 
 And special thanks to [Pauan](https://github.com/pauan) and [Felipe Hoffa](https://medium.com/@hoffa) for the great help and support on me trying these random stuff out :)
