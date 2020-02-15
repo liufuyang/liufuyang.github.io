@@ -312,10 +312,12 @@ CREATE TEMP FUNCTION `hex_to_b62`(hex STRING) RETURNS STRING
 ```
 
 ## Performance result comparison on direct calling (no grouping)
+
 |function|JavaScript|Rust/WASM|
---|--|--
-**b62_to_hex**| **20.2** sec| 26.8 sec
-**hex_to_b62**| **15.4** sec| 22.7 sec
+|--|--|--|
+|**b62_to_hex**| **20.2** sec| 26.8 sec|
+|**hex_to_b62**| **15.4** sec| 22.7 sec|
+
 Tested each function running once on a data set having 138,328,003 rows.
 
 I would conclude that the result is not much different than the previous test with grouping. But indeed the SQL code can be much simpler now.
